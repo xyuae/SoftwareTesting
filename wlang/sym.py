@@ -225,11 +225,31 @@ class SymExec (wlang.ast.AstVisitor):
                 
     def visit_WhileStmt_inv (self, node, *args, **kwargs):
         """" Symbolic execution of while loops with invariants """
-
-        ### IMPLEMENT THIS METHOD
-        ### YOU CAN USE YOUR IMPLEMENTATION OF sym.py FROM ASSIGNMENT 2
-        ### INSTEAD OF MINE
-        assert (False);
+        inv = node.inv
+        bound = kwargs.get('loop_bound')
+        if bound is None:
+            bound = self._global_loop_bound
+            
+        cond_val = self.visit (node.cond, *args, **kwargs);
+        # one state enters the loop, one exits
+        enter_st, exit_st = kwargs['state'].fork()
+        
+        # if enter loop, loop condition is true
+        enter_st.add_pc(cond_val)
+        # if exit loop, loop condition is false
+        exit_st.add_pc(z3.Not(cond_val))
+        
+        # if loop condition can be satisfied and we have not tripped loop bound
+        if bound >0 and not enter_st.is_empty():
+            # do loop body, might produce many new states
+            for out in self.visit(node.body, *args, state=enter_st):
+                for out2 in self.visit(node, *args, state=out, loop_bound=bound - 1):
+                    yield out2
+        
+        # if negation of loop condition can be statisfied then can exit
+        # the loop immediately
+        if not exit_st.is_empty():
+            yield exit_st
             
     def visit_WhileStmt_noinv (self, node, *args, **kwargs):
         """ Symbolic execution of while loops with no invariants """
