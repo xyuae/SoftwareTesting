@@ -245,25 +245,24 @@ class SymExec (wlang.ast.AstVisitor):
         cond_val = self.visit (node.cond, *args, **kwargs);
         # one state enters the loop, one exits
         enter_st = kwargs['state']
-        print(inv_st)
-        print(enter_st)
+        # print(inv_st)
+        # print(enter_st)
         # if enter loop, loop condition is true
         enter_st.add_pc(cond_val)
-        print(enter_st)
+        print(enter_st) # uptohere enter_st is a state
         # if loop condition can be satisfied and we have not tripped loop bound
         #if bound >0 and not enter_st.is_empty():
         if not enter_st.is_empty():
-            enter_st = self.visit(node.body, *args, state = enter_st)
-        
-        # assert inv
-        print("assert inv")
-        print(enter_st)
-        enter_st = self.visit_AssertStmt_Inv(node, *args, state = enter_st)  #generator inside
-        # successfully excute the loop
-        exit_st = kwargs['state']
-        exit_st.add_pc(inv_st)
-        exit_st.add_pc(z3.Not(cond_val))
-        yield exit_st
+            for out in self.visit(node.body, *args, state = enter_st) # generator here
+                print(out)
+                # assert inv
+                print("assert inv")
+                enter_st = self.visit_AssertStmt_Inv(node, *args, state = out)  # enter_st is a generator now
+                # successfully excute the loop
+                exit_st = kwargs['state']
+                # exit_st.add_pc(inv_st)
+                exit_st.add_pc(z3.Not(cond_val))
+                yield exit_st
        
             
     def visit_WhileStmt_noinv (self, node, *args, **kwargs):
@@ -287,7 +286,6 @@ class SymExec (wlang.ast.AstVisitor):
             # do loop body, might produce many new states
             for out in self.visit (node.body, *args, state=enter_st):
                 for out2 in self.visit (node, *args, state=out, loop_bound=bound - 1):
-                    
                     yield out2
 
         # if negation of loop condition can be satisfied then can exit
