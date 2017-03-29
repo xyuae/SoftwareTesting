@@ -239,7 +239,7 @@ class SymExec (wlang.ast.AstVisitor):
             kwargs['state'].env[v.name] = z3.FreshInt (v.name)
         
         # assume inv
-        inv_st = visit_AssumeStmtInv(node, *args, *kwargs)     
+        inv_st = visit_AssumeStmtInv(node, *args, **kwargs)     
         #kwargs['state'].add_pc(inv_st)
             
         cond_val = self.visit (node.cond, *args, state = inv_st);
