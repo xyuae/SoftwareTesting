@@ -248,16 +248,17 @@ class SymExec (wlang.ast.AstVisitor):
         print(inv_st)
         print(enter_st)
         # if enter loop, loop condition is true
-        enter_st.add_pc(inv_st)
         enter_st.add_pc(cond_val)
-    
+        print(enter_st)
         # if loop condition can be satisfied and we have not tripped loop bound
         #if bound >0 and not enter_st.is_empty():
         if not enter_st.is_empty():
             enter_st = self.visit(node.body, *args, state = enter_st)
         
         # assert inv
-        enter_st = self.visit_AssertStmt_Inv(node, *args, state = enter_st)
+        print("assert inv")
+        print(enter_st)
+        enter_st = self.visit_AssertStmt_Inv(node, *args, state = enter_st)  #generator inside
         # successfully excute the loop
         exit_st = kwargs['state']
         exit_st.add_pc(inv_st)
