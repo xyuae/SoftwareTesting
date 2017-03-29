@@ -239,7 +239,7 @@ class SymExec (wlang.ast.AstVisitor):
             kwargs['state'].env[v.name] = z3.FreshInt (v.name)
         
         # assume inv
-        inv_st = self.visit_AssumeStmtInv(node, *args, **kwargs).next()     
+        inv_st = self.visit_AssumeStmt_Inv(node, *args, **kwargs)     
         #kwargs['state'].add_pc(inv_st)
             
         cond_val = self.visit (node.cond, *args, **kwargs);
@@ -307,13 +307,13 @@ class SymExec (wlang.ast.AstVisitor):
             false_state.mk_error()
             
         # true_state.add_pc (inv_val)
-        yield true_state
+        return true_state
     
-    def visit_AssumeStmtInv (self, node, *args, **kwargs):
+    def visit_AssumeStmt_Inv (self, node, *args, **kwargs):
         st = kwargs['state']
         inv_val = self.visit (node.inv, *args, **kwargs)
         st.add_pc (inv_val)
-        yield st
+        return st
         
     def visit_AssertStmt (self, node, *args, **kwargs):
         st = kwargs['state']
