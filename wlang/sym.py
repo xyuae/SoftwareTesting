@@ -246,7 +246,7 @@ class SymExec (wlang.ast.AstVisitor):
         # one state enters the loop, one exits
         enter_st = kwargs['state']
         print(inv_st)
-        print("enter_st: " + enter_st)
+        print(enter_st)
         # if enter loop, loop condition is true
         enter_st.add_pc(inv_st)
         enter_st.add_pc(cond_val)
