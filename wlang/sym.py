@@ -227,7 +227,7 @@ class SymExec (wlang.ast.AstVisitor):
         """" Symbolic execution of while loops with invariants """
         # assert inv
         
-        inv_st = visit_AssertStmt_Inv(node, *args, **kwargs)
+        inv_st = self.visit_AssertStmt_Inv(node, *args, **kwargs)
         #kwargs['state'].add_pc(inv_st)
         
         # havoc V
@@ -239,7 +239,7 @@ class SymExec (wlang.ast.AstVisitor):
             kwargs['state'].env[v.name] = z3.FreshInt (v.name)
         
         # assume inv
-        inv_st = visit_AssumeStmtInv(node, *args, **kwargs)     
+        inv_st = self.visit_AssumeStmtInv(node, *args, **kwargs)     
         #kwargs['state'].add_pc(inv_st)
             
         cond_val = self.visit (node.cond, *args, state = inv_st);
@@ -255,7 +255,7 @@ class SymExec (wlang.ast.AstVisitor):
             enter_st = self.visit(node.body, *args, state = enter_st)
         
         # assert inv
-        enter_st = visit_AssertStmt_Inv(node, *args, state = enter_st)
+        enter_st = self.visit_AssertStmt_Inv(node, *args, state = enter_st)
         # successfully excute the loop
         exit_st = kwargs['state']
         exit_st.add_pc(inv_st)
