@@ -298,7 +298,7 @@ class SymExec (wlang.ast.AstVisitor):
     # check the type of inv 
     def visit_AssertStmt_Inv (self, node, *args, **kwargs):
         st = kwargs['state']
-        inv_val = self.visit (node, *args, **kwargs)
+        inv_val = self.visit (node.inv, *args, **kwargs)
         true_state, false_state = st.fork()
         false_state.add_pc(z3.Not (inv_val))
         if not false_state.is_empty ():
