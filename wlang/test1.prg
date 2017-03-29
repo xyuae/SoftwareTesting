@@ -1,7 +1,10 @@
-x := 10;
-while x > 0
-inv x >= 0
-do {
-    x := x - 1
-};
-print_state
+havoc x, y;
+assume y >= 0;
+c := 0;
+r := x;
+while c < y 
+inv c <= y and r = x + c 
+do 
+{ r := r + 1; c := c + 1 }; 
+assert r = x + y
+
