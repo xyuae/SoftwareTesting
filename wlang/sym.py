@@ -253,7 +253,7 @@ class SymExec (wlang.ast.AstVisitor):
         # if loop condition can be satisfied and we have not tripped loop bound
         #if bound >0 and not enter_st.is_empty():
         if not enter_st.is_empty():
-            for out in self.visit(node.body, *args, state = enter_st) # generator here
+            for out in self.visit(node.body, *args, state = enter_st): # generator here
                 print(out)
                 # assert inv
                 print("assert inv")
