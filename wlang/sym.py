@@ -225,31 +225,43 @@ class SymExec (wlang.ast.AstVisitor):
                 
     def visit_WhileStmt_inv (self, node, *args, **kwargs):
         """" Symbolic execution of while loops with invariants """
-        inv = node.inv
-        bound = kwargs.get('loop_bound')
-        if bound is None:
-            bound = self._global_loop_bound
+        # assert inv
+        
+        inv_st = visit_AssertStmt_Inv(node, *args, **kwargs)
+        #kwargs['state'].add_pc(inv_st)
+        
+        # havoc V
+        uv = UndefVisitor ()
+        uv.check()
+        def_nodes = uv.get_defs()
+        
+        for v in def_nodes:
+            kwargs['state'].env[v.name] = z3.FreshInt (v.name)
+        
+        # assume inv
+        inv_st = visit_AssumeStmtInv(node, *args, *kwargs)     
+        #kwargs['state'].add_pc(inv_st)
             
-        cond_val = self.visit (node.cond, *args, **kwargs);
+        cond_val = self.visit (node.cond, *args, state = inv_st);
         # one state enters the loop, one exits
-        enter_st, exit_st = kwargs['state'].fork()
+        enter_st = kwargs['state']
         
         # if enter loop, loop condition is true
         enter_st.add_pc(cond_val)
-        # if exit loop, loop condition is false
-        exit_st.add_pc(z3.Not(cond_val))
-        
+    
         # if loop condition can be satisfied and we have not tripped loop bound
-        if bound >0 and not enter_st.is_empty():
-            # do loop body, might produce many new states
-            for out in self.visit(node.body, *args, state=enter_st):
-                for out2 in self.visit(node, *args, state=out, loop_bound=bound - 1):
-                    yield out2
+        #if bound >0 and not enter_st.is_empty():
+        if not enter_st.is_empty():
+            enter_st = self.visit(node.body, *args, state = enter_st)
         
-        # if negation of loop condition can be statisfied then can exit
-        # the loop immediately
-        if not exit_st.is_empty():
-            yield exit_st
+        # assert inv
+        enter_st = visit_AssertStmt_Inv(node, *args, state = enter_st)
+        # successfully excute the loop
+        exit_st = kwargs['state']
+        exit_st.add_pc(inv_st)
+        exit_st.add_pc(z3.Not(cond_val))
+        yield exit_st
+       
             
     def visit_WhileStmt_noinv (self, node, *args, **kwargs):
         """ Symbolic execution of while loops with no invariants """
@@ -272,14 +284,35 @@ class SymExec (wlang.ast.AstVisitor):
             # do loop body, might produce many new states
             for out in self.visit (node.body, *args, state=enter_st):
                 for out2 in self.visit (node, *args, state=out, loop_bound=bound - 1):
+                    
                     yield out2
 
         # if negation of loop condition can be satisfied then can exit
         # the loop immediatelly
         if not exit_st.is_empty ():
             yield exit_st
+    
+    # the definition of AssertInv doesn't apply the visitor pattern
+    # check the type of inv 
+    def visit_AssertStmt_Inv (self, node, *args, **kwargs):
+        st = kwargs['state']
+        inv_val = self.visit (node, *args, **kwargs)
+        true_state, false_state = st.fork()
+        false_state.add_pc(z3.Not (inv_val))
+        if not false_state.is_empty ():
+            print ('[symexec]: Error at', node, 'with', false_state)
+            print ('[symexec]: Concrete state', false_state.pick_concerete())
+            false_state.mk_error()
             
-
+        # true_state.add_pc (inv_val)
+        yield true_state
+    
+    def visit_AssumeStmtInv (self, node, *args, **kwargs):
+        st = kwargs['state']
+        inv_val = self.visit (node.inv, *args, **kwargs)
+        st.add_pc (inv_val)
+        yield st
+        
     def visit_AssertStmt (self, node, *args, **kwargs):
         st = kwargs['state']
         cond_val = self.visit (node.cond, *args, **kwargs)
@@ -293,6 +326,7 @@ class SymExec (wlang.ast.AstVisitor):
         true_state.add_pc (cond_val)
         yield true_state
     
+        
     def visit_AssumeStmt (self, node, *args, **kwargs):
         st = kwargs['state']
         cond_val = self.visit (node.cond, *args, **kwargs)
