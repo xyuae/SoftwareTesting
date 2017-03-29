@@ -232,7 +232,7 @@ class SymExec (wlang.ast.AstVisitor):
         
         # havoc V
         uv = UndefVisitor ()
-        uv.check()
+        uv.check(node.body)
         def_nodes = uv.get_defs()
         
         for v in def_nodes:
@@ -242,11 +242,12 @@ class SymExec (wlang.ast.AstVisitor):
         inv_st = self.visit_AssumeStmtInv(node, *args, **kwargs)     
         #kwargs['state'].add_pc(inv_st)
             
-        cond_val = self.visit (node.cond, *args, state = inv_st);
+        cond_val = self.visit (node.cond, *args, **kwargs);
         # one state enters the loop, one exits
         enter_st = kwargs['state']
         
         # if enter loop, loop condition is true
+        enter_st.add_pc(inv_st)
         enter_st.add_pc(cond_val)
     
         # if loop condition can be satisfied and we have not tripped loop bound
