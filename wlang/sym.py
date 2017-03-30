@@ -274,14 +274,14 @@ class SymExec (wlang.ast.AstVisitor):
                 # exit_st.add_pc(inv_st)
                 # exit_st.add_pc(z3.Not(cond_val))
                 
-        else:
-            exit_st = self.visit_AssumeStmt_Inv(node, *args, state=exit_st)
-            cond_val = self.visit (node.cond, *args, state=exit_st)
-            print(cond_val)
-            print("not cond_val")
-            print(z3.Not(cond_val))
-            exit_st.add_pc(z3.Not(cond_val))
-            yield exit_st
+        
+        exit_st = self.visit_AssumeStmt_Inv(node, *args, state=exit_st)
+        cond_val = self.visit (node.cond, *args, state=exit_st)
+        print(cond_val)
+        print("not cond_val")
+        print(z3.Not(cond_val))
+        exit_st.add_pc(z3.Not(cond_val))
+        yield exit_st
             
             
             
