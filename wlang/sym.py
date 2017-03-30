@@ -267,7 +267,8 @@ class SymExec (wlang.ast.AstVisitor):
                 # print("assert inv")
                 self.visit_AssertStmt_Inv(node, *args, state = out)  # enter_st is a generator now
                 # assume(false)
-                assert False
+                self.visit(wlang.ast.parse_string ("assert false"), state = out)
+                
                 # successfully excute the loop
                 # exit_st = kwargs['state']
                 # exit_st.add_pc(inv_st)
