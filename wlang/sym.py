@@ -237,16 +237,18 @@ class SymExec (wlang.ast.AstVisitor):
         inv_st = self.visit_AssertStmt_Inv(node, *args, **kwargs)
         #kwargs['state'].add_pc(inv_st)
         
-        enter_st, exit_st = kwargs['state'].fork()
+	st = kwargs['state']
         # havoc V
         uv = UndefVisitor ()
         uv.check(node.body)
         def_nodes = uv.get_defs()
         
         for v in def_nodes:
-            enter_st.env[v.name] = z3.FreshInt (v.name)
+            st.env[v.name] = z3.FreshInt (v.name)
         
-        # assume inv
+        
+        enter_st, exit_st = st.fork()
+	#  assume inv
         enter_st = self.visit_AssumeStmt_Inv(node, *args, state = enter_st)     
         #kwargs['state'].add_pc(inv_st)
             
