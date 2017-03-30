@@ -250,7 +250,7 @@ class SymExec (wlang.ast.AstVisitor):
         enter_st = self.visit_AssumeStmt_Inv(node, *args, state = enter_st)     
         #kwargs['state'].add_pc(inv_st)
             
-        cond_val = self.visit (node.cond, *args, enter_st)
+        cond_val = self.visit (node.cond, *args, state = enter_st)
         # one state enters the loop, one exits
         
         # print(inv_st)
