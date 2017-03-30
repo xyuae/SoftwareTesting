@@ -104,11 +104,9 @@ class SymExec (wlang.ast.AstVisitor):
         self._global_loop_bound = loop_bound
 
     def run (self, ast, state):
-        if state.is_empty ():
-            yield state
-            
-        for out in self.visit (ast, state=state):
-            yield out
+        if not state.is_empty ():
+            for out in self.visit (ast, state=state):
+                yield out
 
     def visit_IntVar (self, node, *args, **kwargs):
         return kwargs['state'].env [node.name]
@@ -196,9 +194,7 @@ class SymExec (wlang.ast.AstVisitor):
         then_branch, else_branch = st.fork ()
         then_branch.add_pc (cond_val)
         
-        if then_branch.is_empty ():
-            yield then_branch
-        else:
+        if not then_branch.is_empty ():
             # cover all path under then branch
             nkwargs = dict (kwargs)
             nkwargs['state'] = then_branch
@@ -206,16 +202,27 @@ class SymExec (wlang.ast.AstVisitor):
                 yield out
             
         else_branch.add_pc (z3.Not (cond_val))
-        if (not else_branch.is_empty()) and node.has_else ():
-            nkwargs = dict (kwargs)
-            nkwargs['state'] = else_branch
-            for out in self.visit (node.else_stmt, *args, **nkwargs):
-                yield out
-        else:
-            yield else_branch
+        if not else_branch.is_empty ():
+            if node.has_else ():
+                nkwargs = dict (kwargs)
+                nkwargs['state'] = else_branch
+                for out in self.visit (node.else_stmt, *args, **nkwargs):
+                    yield out
+            else:        
+                yield else_branch
             
     def visit_WhileStmt (self, node, *args, **kwargs):
         """ Symbolic execution of while loops """
+        if node.inv is not None:
+            for out in self.visit_WhileStmt_inv (node, *args, **kwargs):
+                yield out
+        else:
+            for out in self.visit_WhileStmt_noinv (node, *args, **kwargs):
+                yield out
+                
+    def visit_WhileStmt_inv (self, node, *args, **kwargs):
+        """" Symbolic execution of while loops with invariants """
+
         if node.inv is not None:
             for out in self.visit_WhileStmt_inv (node, *args, **kwargs):
                 yield out
@@ -230,40 +237,49 @@ class SymExec (wlang.ast.AstVisitor):
         inv_st = self.visit_AssertStmt_Inv(node, *args, **kwargs)
         #kwargs['state'].add_pc(inv_st)
         
+        enter_st, exit_st = kwargs['state'].fork()
         # havoc V
         uv = UndefVisitor ()
         uv.check(node.body)
         def_nodes = uv.get_defs()
         
         for v in def_nodes:
-            kwargs['state'].env[v.name] = z3.FreshInt (v.name)
+            enter_st.env[v.name] = z3.FreshInt (v.name)
         
         # assume inv
-        inv_st = self.visit_AssumeStmt_Inv(node, *args, **kwargs)     
+        enter_st = self.visit_AssumeStmt_Inv(node, *args, state = enter_st)     
         #kwargs['state'].add_pc(inv_st)
             
-        cond_val = self.visit (node.cond, *args, **kwargs);
+        cond_val = self.visit (node.cond, *args, enter_st)
         # one state enters the loop, one exits
-        enter_st = kwargs['state']
+        
         # print(inv_st)
         # print(enter_st)
         # if enter loop, loop condition is true
         enter_st.add_pc(cond_val)
-        print(enter_st) # uptohere enter_st is a state
+        print(enter_st) 
         # if loop condition can be satisfied and we have not tripped loop bound
         #if bound >0 and not enter_st.is_empty():
         if not enter_st.is_empty():
             for out in self.visit(node.body, *args, state = enter_st): # generator here
-                print(out)
+                # print(out)
                 # assert inv
-                print("assert inv")
-                enter_st = self.visit_AssertStmt_Inv(node, *args, state = out)  # enter_st is a generator now
+                # print("assert inv")
+                self.visit_AssertStmt_Inv(node, *args, state = out)  # enter_st is a generator now
+                # assume(false)
+                assert False
                 # successfully excute the loop
-                exit_st = kwargs['state']
+                # exit_st = kwargs['state']
                 # exit_st.add_pc(inv_st)
-                exit_st.add_pc(z3.Not(cond_val))
-                yield exit_st
-       
+                # exit_st.add_pc(z3.Not(cond_val))
+                
+        else:
+            exit_st = self.visit_AssumeStmt_Inv(node, *args, state=exit_st)
+            cond_val = self.visit (node.cond, *args, state=exit_st)
+            exit_st.add_pc(z3.Not(cond_val))
+            yield exit_st
+            
+            
             
     def visit_WhileStmt_noinv (self, node, *args, **kwargs):
         """ Symbolic execution of while loops with no invariants """
@@ -292,6 +308,7 @@ class SymExec (wlang.ast.AstVisitor):
         # the loop immediatelly
         if not exit_st.is_empty ():
             yield exit_st
+            
     
     # the definition of AssertInv doesn't apply the visitor pattern
     # check the type of inv 
@@ -313,7 +330,7 @@ class SymExec (wlang.ast.AstVisitor):
         inv_val = self.visit (node.inv, *args, **kwargs)
         st.add_pc (inv_val)
         return st
-        
+    
     def visit_AssertStmt (self, node, *args, **kwargs):
         st = kwargs['state']
         cond_val = self.visit (node.cond, *args, **kwargs)
@@ -325,14 +342,15 @@ class SymExec (wlang.ast.AstVisitor):
             false_state.mk_error ()
             
         true_state.add_pc (cond_val)
-        yield true_state
+        if not true_state.is_empty ():
+            yield true_state
     
-        
     def visit_AssumeStmt (self, node, *args, **kwargs):
         st = kwargs['state']
         cond_val = self.visit (node.cond, *args, **kwargs)
         st.add_pc (cond_val)
-        yield st
+        if not st.is_empty ():
+            yield st
 
     def visit_HavocStmt (self, node, *args, **kwargs):
         st = kwargs['state']
