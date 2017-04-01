@@ -53,6 +53,6 @@ class TestSym (unittest.TestCase):
         sym = wlang.sym.SymExec ()
         st = wlang.sym.SymState ()
         out = [s for s in sym.run (ast1, st)]
-        self.assertEquals (len(out), 1)
+        self.assertEquals (len(out), 0)
         
         
