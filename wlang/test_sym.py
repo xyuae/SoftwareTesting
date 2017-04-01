@@ -39,5 +39,20 @@ class TestSym (unittest.TestCase):
         st = wlang.sym.SymState ()
         out = [s for s in sym.run (ast1, st)]
         self.assertEquals (len(out), 1)
+    def test_two_wrong (self):
+        prg1 = "havoc x, y; assume y > 0; c := 0; r := x; while c < y inv c <= y do { r := r + 1; c := c + 1 }; assert r = x + y"
+        ast1 = ast.parse_string (prg1)
+        sym = wlang.sym.SymExec ()
+        st = wlang.sym.SymState ()
+        out = [s for s in sym.run (ast1, st)]
+        self.assertEquals (len(out), 1)
+        
+    def test_two_wrong_inv (self):
+        prg1 = "havoc x, y; assume y >= 0; c := 0; r := x; while c < y inv c < y do { r := r + 1; c := c + 1 }; assert r = x + y"
+        ast1 = ast.parse_string (prg1)
+        sym = wlang.sym.SymExec ()
+        st = wlang.sym.SymState ()
+        out = [s for s in sym.run (ast1, st)]
+        self.assertEquals (len(out), 1)
         
         

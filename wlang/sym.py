@@ -237,7 +237,7 @@ class SymExec (wlang.ast.AstVisitor):
         inv_st = self.visit_AssertStmt_Inv(node, *args, **kwargs)
         #kwargs['state'].add_pc(inv_st)
         
-	st = kwargs['state']
+	    st = kwargs['state']
         # havoc V
         uv = UndefVisitor ()
         uv.check(node.body)
@@ -259,7 +259,7 @@ class SymExec (wlang.ast.AstVisitor):
         # print(enter_st)
         # if enter loop, loop condition is true
         enter_st.add_pc(cond_val)
-        print(enter_st) 
+        # print(enter_st) 
         # if loop condition can be satisfied and we have not tripped loop bound
         #if bound >0 and not enter_st.is_empty():
         if not enter_st.is_empty():
@@ -269,7 +269,7 @@ class SymExec (wlang.ast.AstVisitor):
                 # print("assert inv")
                 self.visit_AssertStmt_Inv(node, *args, state = out)  # enter_st is a generator now
                 # assume(false)
-                self.visit(wlang.ast.parse_string ("assert false"), state = out)
+                self.visit(wlang.ast.parse_string ("assume false"), state = out)
                 
                 # successfully excute the loop
                 # exit_st = kwargs['state']
@@ -279,9 +279,7 @@ class SymExec (wlang.ast.AstVisitor):
         
         exit_st = self.visit_AssumeStmt_Inv(node, *args, state=exit_st)
         cond_val = self.visit (node.cond, *args, state=exit_st)
-        print(cond_val)
-        print("not cond_val")
-        print(z3.Not(cond_val))
+        # print(cond_val)
         exit_st.add_pc(z3.Not(cond_val))
         yield exit_st
             
