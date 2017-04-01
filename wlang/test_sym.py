@@ -80,5 +80,11 @@ class TestSym (unittest.TestCase):
     	st = wlang.sym.SymState()
     	out = [s for s in sym.run (ast1, st)]
     	self.assertEquals (len(out), 1)
-
         
+    def test_five (self):
+    	prg1 = "havoc x; if not true then skip else skip; print_state"
+    	ast1 = ast.StmtList(None)
+    	sym = wlang.sym.SymExec ()
+    	st = wlang.sym.SymState()
+    	out = [s for s in sym.run (ast1, st)]
+    	self.assertEquals (len(out), 1)
