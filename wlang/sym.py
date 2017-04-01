@@ -236,7 +236,9 @@ class SymExec (wlang.ast.AstVisitor):
         
         inv_st = self.visit_AssertStmt_Inv(node, *args, **kwargs)
         #kwargs['state'].add_pc(inv_st)
+        
         st = kwargs['state']
+
         # havoc V
         uv = UndefVisitor ()
         uv.check(node.body)
