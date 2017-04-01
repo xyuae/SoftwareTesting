@@ -26,7 +26,7 @@ import wlang.sym
 
 class TestSym (unittest.TestCase):
     def test_one (self):
-        prg1 = "havoc x; assume x > 10; assert x > 15"
+        prg1 = "havoc x; assume x > 10; assert x > 15; x := x * 1; x := x / 1; x := x - 0; if x > 0 and x = 0 or true then skip else skip"
         ast1 = ast.parse_string (prg1)
         sym = wlang.sym.SymExec ()
         st = wlang.sym.SymState ()
@@ -54,5 +54,11 @@ class TestSym (unittest.TestCase):
         st = wlang.sym.SymState ()
         out = [s for s in sym.run (ast1, st)]
         self.assertEquals (len(out), 0)
-        
+    def test_three (self):
+	prg1 = ""
+	ast1 = ast.parse_string(prg1)
+	sym = wlang.sym.SymExec ()
+	st = wlang.sym.SymState()
+	out = [s for s in sym.run (ast1, st)]
+	self.assertEquals (len(out), 1)    
         
