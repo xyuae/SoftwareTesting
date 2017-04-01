@@ -220,15 +220,6 @@ class SymExec (wlang.ast.AstVisitor):
             for out in self.visit_WhileStmt_noinv (node, *args, **kwargs):
                 yield out
                 
-    def visit_WhileStmt_inv (self, node, *args, **kwargs):
-        """" Symbolic execution of while loops with invariants """
-
-        if node.inv is not None:
-            for out in self.visit_WhileStmt_inv (node, *args, **kwargs):
-                yield out
-        else:
-            for out in self.visit_WhileStmt_noinv (node, *args, **kwargs):
-                yield out
                 
     def visit_WhileStmt_inv (self, node, *args, **kwargs):
         """" Symbolic execution of while loops with invariants """
