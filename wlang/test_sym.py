@@ -82,7 +82,7 @@ class TestSym (unittest.TestCase):
     	self.assertEquals (len(out), 1)
         
     def test_five (self):
-    	prg1 = "havoc x; if not true then skip; {} "
+    	prg1 = "havoc x; if not true then skip; {skip} "
     	ast1 = ast.parse_string(prg1)
     	sym = wlang.sym.SymExec ()
     	st = wlang.sym.SymState()
