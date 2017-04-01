@@ -80,11 +80,5 @@ class TestSym (unittest.TestCase):
     	st = wlang.sym.SymState()
     	out = [s for s in sym.run (ast1, st)]
     	self.assertEquals (len(out), 1)
-    	
-    def test_empty_st (self):
-    	ast1 = ast.parse_string(None)
-    	sym = wlang.sym.SymExec ()
-    	st = wlang.sym.SymState()
-    	out = [s for s in sym.run (ast1, st)]
-    	self.assertEquals (len(out), 1)
+
         
